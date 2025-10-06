@@ -1,70 +1,195 @@
-# Getting Started with Create React App
+# 🗳️ Sistema de Votación UEEA
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Sistema de votación electrónica desarrollado para la Unidad Educativa Ecuatoriana Austriaca. Permite realizar elecciones estudiantiles de manera segura y eficiente.
 
-## Available Scripts
+## 🚀 Características
 
-In the project directory, you can run:
+- **Dashboard Administrativo**: Gestión completa de elecciones y votantes
+- **Sistema de Votación**: Interfaz intuitiva para estudiantes
+- **Importación Masiva**: Carga de estudiantes via Excel/CSV
+- **Resultados en Tiempo Real**: Visualización de resultados con gráficos
+- **Exportación de Datos**: Descarga de resultados en Excel
+- **Seguridad**: Autenticación Firebase y prevención de doble votación
+- **Responsive**: Optimizado para móviles y escritorio
 
-### `npm start`
+## 🛠️ Tecnologías
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Frontend**: React 19, Tailwind CSS
+- **Backend**: Firebase (Firestore, Authentication)
+- **Charts**: Recharts
+- **Icons**: Lucide React
+- **Build Tool**: Create React App
+- **Package Manager**: pnpm
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 📋 Prerrequisitos
 
-### `npm test`
+- Node.js 16+ 
+- pnpm
+- Cuenta de Firebase
+- Navegador moderno
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## ⚙️ Instalación
 
-### `npm run build`
+1. **Clonar el repositorio**
+   ```bash
+   git clone https://github.com/tu-usuario/sistema-votacion-ueea.git
+   cd sistema-votacion-ueea
+   ```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+2. **Instalar dependencias**
+   ```bash
+   pnpm install
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+3. **Configurar variables de entorno**
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Completar `.env` con tus credenciales de Firebase:
+   ```env
+   REACT_APP_FIREBASE_API_KEY=tu_api_key
+   REACT_APP_FIREBASE_AUTH_DOMAIN=tu_proyecto.firebaseapp.com
+   REACT_APP_FIREBASE_PROJECT_ID=tu_proyecto_id
+   # ... resto de variables
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+4. **Configurar Firebase**
+   - Crear proyecto en [Firebase Console](https://console.firebase.google.com)
+   - Habilitar Authentication (Email/Password y Anonymous)
+   - Crear base de datos Firestore
+   - Configurar reglas de seguridad (ver sección Seguridad)
 
-### `npm run eject`
+5. **Iniciar aplicación**
+   ```bash
+   pnpm start
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🔐 Configuración de Seguridad
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Reglas de Firestore (IMPORTANTE)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Solo administradores autenticados pueden escribir
+    match /{document=**} {
+      allow read, write: if request.auth != null && request.auth.token.email != null;
+    }
+    
+    // Usuarios anónimos solo pueden leer datos públicos y votar
+    match /artifacts/{appId}/public/data/{document=**} {
+      allow read: if request.auth != null;
+    }
+    
+    match /artifacts/{appId}/public/data/votes/{voteId} {
+      allow create: if request.auth != null && 
+                      request.resource.data.voterCode is string &&
+                      request.resource.data.electionId is string;
+    }
+    
+    match /artifacts/{appId}/public/data/voters/{voterId} {
+      allow update: if request.auth != null && 
+                      resource.id == voterId &&
+                      request.resource.data.diff(resource.data).affectedKeys() == ['hasVoted'].toSet();
+    }
+  }
+}
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 📖 Uso
 
-## Learn More
+### Administrador
+1. Acceder con credenciales de administrador
+2. Crear nueva elección con opciones
+3. Importar lista de votantes (Excel/CSV)
+4. Activar elección
+5. Monitorear resultados en tiempo real
+6. Exportar resultados finales
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Estudiante
+1. Ingresar código estudiantil
+2. Seleccionar opción de voto
+3. Confirmar voto
+4. Recibir confirmación
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 📊 Scripts Disponibles
 
-### Code Splitting
+```bash
+# Desarrollo
+pnpm start          # Iniciar servidor de desarrollo
+pnpm build          # Crear build de producción
+pnpm test           # Ejecutar tests
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+# Análisis
+pnpm build:analyze  # Analizar tamaño del bundle
+```
 
-### Analyzing the Bundle Size
+## 🚀 Despliegue
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Firebase Hosting (Recomendado)
+```bash
+# Instalar Firebase CLI
+npm install -g firebase-tools
 
-### Making a Progressive Web App
+# Login y configurar
+firebase login
+firebase init hosting
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+# Desplegar
+pnpm build
+firebase deploy
+```
 
-### Advanced Configuration
+### Netlify / Vercel
+1. Conectar repositorio
+2. Configurar variables de entorno
+3. Build command: `pnpm build`
+4. Publish directory: `build`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 🔧 Estructura del Proyecto
 
-### Deployment
+```
+src/
+├── App.js              # Componente principal
+├── App.css             # Estilos globales
+├── index.js            # Punto de entrada
+└── components/         # Componentes (futuras versiones)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+public/
+├── index.html          # Template HTML
+├── manifest.json       # PWA manifest
+└── favicon.ico         # Icono
 
-### `npm run build` fails to minify
+Firebase/
+├── firestore.rules     # Reglas de seguridad
+├── firebase.json       # Configuración Firebase
+└── .env               # Variables de entorno (no incluir en Git)
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 🤝 Contribuir
+
+1. Fork del proyecto
+2. Crear branch para feature (`git checkout -b feature/AmazingFeature`)
+3. Commit cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push al branch (`git push origin feature/AmazingFeature`)
+5. Abrir Pull Request
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT - ver [LICENSE](LICENSE) para detalles.
+
+## 👥 Autores
+
+- **Tu Nombre** - *Desarrollo inicial* - [tu-usuario](https://github.com/tu-usuario)
+
+## 🙏 Agradecimientos
+
+- Unidad Educativa Ecuatoriana Austriaca
+- Comunidad de React y Firebase
+- Contribuidores del proyecto
+
+---
+
+**⚠️ Nota de Seguridad**: Este sistema maneja datos sensibles de votación. Asegúrate de seguir todas las mejores prácticas de seguridad antes de usar en producción.
