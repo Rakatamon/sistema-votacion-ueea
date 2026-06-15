@@ -1,15 +1,12 @@
 /* global XLSX */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { initializeApp } from 'firebase/app';
 import { 
-    getAuth, 
     signInAnonymously, 
     signInWithEmailAndPassword, 
     signOut, 
     onAuthStateChanged
 } from 'firebase/auth';
 import { 
-    getFirestore, 
     collection, 
     doc, 
     addDoc, 
@@ -24,108 +21,29 @@ import {
     writeBatch,
     deleteField
 } from 'firebase/firestore';
-// TODO: Para la subida de imágenes, necesitarás importar estas funciones de Firebase Storage
-// import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+import { auth, db, appId } from './services/firebase';
+
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, RadialBarChart, RadialBar, PolarAngleAxis, LabelList } from 'recharts';
 import { Users, ListPlus, Vote, BarChart3, LogIn, LogOut, UserPlus, Trash2, Edit3, ImagePlus, PlusCircle, CheckCircle, XCircle, Settings, Home, UploadCloud, Download, AlertTriangle, Filter, UserCheck, UserX, RefreshCw, Eye, ChevronDown } from 'lucide-react';
 
+// Components
+import Header from './components/common/Header';
+import Modal from './components/common/Modal';
+import Messages from './components/common/Messages';
+import LoginChoice from './components/auth/LoginChoice';
+import AdminLogin from './components/auth/AdminLogin';
+import StudentVoting from './components/student/StudentVoting';
+import StudentMessage from './components/student/StudentMessage';
+import AdminDashboard from './components/admin/AdminDashboard';
+import EditVoterModal from './components/admin/EditVoterModal';
+import EditElectionModal from './components/admin/EditElectionModal';
 // Se espera que la librería XLSX (SheetJS) esté disponible globalmente a través de un CDN.
 // <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 
-// --- CONFIGURACIÓN ---
-const INSTITUTION_LOGO_URL = 'https://i.imgur.com/cVBYyq3.png';
-
-const colors = {
-    primary: 'blue-800', 
-    secondary: 'red-600',
-    light: 'white',
-    darkText: 'gray-800',
-    lightText: 'white',
-    accent: 'blue-600',
-    danger: 'red-600',
-    warning: 'yellow-500',
-};
-
-// Configuración de Firebase usando variables de entorno
-const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID,
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-// TODO: Inicializa Firebase Storage cuando estés listo para implementar la subida de archivos
-// const storage = getStorage(app);
-
-const appId = import.meta.env.VITE_APP_ID || 'voting-app-ueea';
-
-// --- Funciones de Utilidad ---
-const getTextColorForBackground = (hexColor) => {
-    if (!hexColor || hexColor.length < 7) return 'text-white';
-    try {
-        const r = parseInt(hexColor.substr(1, 2), 16);
-        const g = parseInt(hexColor.substr(3, 2), 16);
-        const b = parseInt(hexColor.substr(5, 2), 16);
-        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-        return (yiq >= 128) ? 'text-black' : 'text-white';
-    } catch (e) {
-        return 'text-white';
-    }
-};
-
-const DEFAULT_COLORS = ['#3182CE', '#38A169', '#DD6B20', '#805AD5', '#E53E3E'];
-
-// --- Componente de Modal Genérico ---
-const Modal = ({ show, onClose, onConfirm, title, children, confirmText = "Confirmar", cancelText = "Cancelar", danger = false }) => {
-    if (!show) return null;
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-            <div className={`bg-white rounded-lg shadow-xl p-6 w-full max-w-sm transform transition-all`}>
-                <div className="flex items-start">
-                    <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full ${danger ? 'bg-red-100' : 'bg-blue-100'}`}>
-                        <AlertTriangle className={`${danger ? 'text-red-600' : 'text-blue-600'}`} size={24} />
-                    </div>
-                    <div className="ml-4 text-left">
-                        <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                            {title}
-                        </h3>
-                        <div className="mt-2">
-                            <p className="text-sm text-gray-500">
-                                {children}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                    <button
-                        type="button"
-                        onClick={onConfirm}
-                        className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white ${danger ? `bg-red-600 hover:bg-red-700 focus:ring-red-500` : `bg-blue-600 hover:bg-blue-700 focus:ring-blue-500`} focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm`}
-                    >
-                        {confirmText}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
-                    >
-                        {cancelText}
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
+import { DEFAULT_COLORS } from './utils/constants';
 
 // --- Componente Principal ---
 function App() {
