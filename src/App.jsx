@@ -950,11 +950,9 @@ function App() {
             <EditVoterModal editingVoter={editingVoter} setEditingVoter={setEditingVoter} handleUpdateVoter={handleUpdateVoter} isLoading={isLoading} />
             <EditElectionModal editingElection={editingElection} setEditingElection={setEditingElection} handleUpdateElection={handleUpdateElection} isLoading={isLoading} />
             
-            <Modal show={showDeleteElectionModal} onClose={() => setShowDeleteElectionModal(false)} onConfirm={confirmDeleteElection} title="Eliminar Elección" danger={true}>¿Estás seguro de que deseas eliminar esta elección? Esta acción no se puede deshacer y eliminará todos los votos asociados.</Modal>
-            <Modal show={showResetVotesModal} onClose={() => setShowResetVotesModal(false)} onConfirm={confirmResetVotes} title="Resetear Votos" danger={true}>¿Estás seguro de que deseas resetear (borrar) todos los votos de esta elección? Esta acción no se puede deshacer.</Modal>
-            <Modal show={showDeleteVoterModal} onClose={() => setShowDeleteVoterModal(false)} onConfirm={confirmDeleteVoter} title="Eliminar Votante" danger={true}>¿Estás seguro de que deseas eliminar a este votante?</Modal>
-            <Modal show={showDeleteCourseVotersModal} onClose={() => setShowDeleteCourseVotersModal(false)} onConfirm={confirmDeleteCourseVoters} title="Borrar Votantes por Curso" danger={true}>¿Estás seguro de que deseas borrar a TODOS los votantes del curso <strong>{courseToDelete}</strong>?</Modal>
-            <Modal show={showDeleteAllVotersModal} onClose={() => setShowDeleteAllVotersModal(false)} onConfirm={confirmDeleteAllVoters} title="Borrar Todos los Votantes" danger={true}>¿Estás seguro de que deseas borrar a <strong>TODOS</strong> los votantes registrados? Esta acción es irreversible.</Modal>
+            <Modal show={modalState.show} onClose={hideModal} onConfirm={modalState.onConfirm} title={modalState.title} danger={modalState.danger}>
+                {modalState.message}
+            </Modal>
         </div>
     );
 };
