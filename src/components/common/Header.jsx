@@ -2,7 +2,7 @@ import React from 'react';
 import { LogOut } from 'lucide-react';
 import { INSTITUTION_LOGO_URL, colors } from '../../utils/constants';
 
-const Header = ({ user, currentVoter, isAdmin, handleLogout }) => {
+const Header = ({ user, currentVoter, isAdmin, handleLogout, view, setView }) => {
     return (
         <header className={`bg-${colors.primary} text-${colors.lightText} p-4 shadow-md sticky top-0 z-40`}>
             <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
@@ -17,15 +17,24 @@ const Header = ({ user, currentVoter, isAdmin, handleLogout }) => {
                         UNIDAD EDUCATIVA ECUATORIANA AUSTRIACA
                     </h1>
                 </div>
-                <div>
-                {((user && !user.isAnonymous) || currentVoter) && (
-                    <button
-                        onClick={handleLogout}
-                        className={`bg-${colors.danger} hover:bg-red-700 text-${colors.lightText} font-semibold py-2 px-4 rounded-lg flex items-center transition duration-150`}
-                    >
-                        <LogOut size={18} className="mr-2" /> {isAdmin ? 'Salir' : 'Finalizar Sesión'}
-                    </button>
-                )}
+                <div className="flex gap-2 items-center">
+                    {view === 'loginChoice' && !currentVoter && (!user || user.isAnonymous) && (
+                        <button
+                            type="button"
+                            onClick={() => setView('adminLogin')}
+                            className="bg-blue-800 hover:bg-blue-900 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm"
+                        >
+                            Acceso Administrador
+                        </button>
+                    )}
+                    {((user && !user.isAnonymous) || currentVoter) && (
+                        <button
+                            onClick={handleLogout}
+                            className={`bg-${colors.danger} hover:bg-red-700 text-${colors.lightText} font-semibold py-2 px-4 rounded-lg flex items-center transition duration-150`}
+                        >
+                            <LogOut size={18} className="mr-2" /> {isAdmin ? 'Salir' : 'Finalizar Sesión'}
+                        </button>
+                    )}
                 </div>
             </div>
         </header>

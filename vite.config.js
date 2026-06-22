@@ -10,5 +10,7 @@ export default defineConfig({
   ],
   server: {
     port: 3000,
+    //borrar esto de aquí cuando se haga deploy o se suba a git//
+    host: true,
   },
 });

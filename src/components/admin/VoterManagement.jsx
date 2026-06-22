@@ -1,5 +1,6 @@
 import React from 'react';
-import { UserPlus, CheckCircle, UploadCloud, UserCheck, UserX, Trash2, Filter, Edit3 } from 'lucide-react';
+import { UserPlus, CheckCircle, UploadCloud, UserCheck, UserX, Trash2, Filter, Edit3, Printer } from 'lucide-react';
+import jsPDF from 'jspdf';
 
 const VoterManagement = ({
     newVoterId, setNewVoterId,
@@ -21,6 +22,63 @@ const VoterManagement = ({
     handleDeleteVoter,
     missingVotersByCourse
 }) => {
+    const handleExportVotersPDF = () => {
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const marginX = 10;
+        const marginY = 20;
+        const columns = 3;
+        const cardWidth = (pageWidth - 2 * marginX) / columns;
+        const cardHeight = 25;
+        
+        let x = marginX;
+        let y = marginY;
+        
+        doc.setFontSize(16);
+        doc.text(`Códigos de Votantes - ${courseFilter === 'all' ? 'Todos' : courseFilter}`, pageWidth/2, 12, { align: 'center' });
+        
+        const votersToExport = voterListView === 'all' ? filteredVoters : missingVotersByCourse.flatMap(c => c.voters);
+
+        votersToExport.forEach((voter, index) => {
+            if (y + cardHeight > pageHeight - marginY + 5) {
+                doc.addPage();
+                x = marginX;
+                y = marginY;
+                doc.setFontSize(16);
+                doc.text(`Códigos de Votantes - ${courseFilter === 'all' ? 'Todos' : courseFilter}`, pageWidth/2, 12, { align: 'center' });
+            }
+
+            // Draw box
+            doc.setDrawColor(150);
+            doc.setLineWidth(0.3);
+            doc.rect(x, y, cardWidth, cardHeight);
+            
+            // Text inside box
+            doc.setFontSize(8);
+            doc.setTextColor(100);
+            const courseStr = `${voter.courseLevel} ${voter.courseName}`;
+            doc.text(courseStr.substring(0, 35), x + 3, y + 6);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(0);
+            doc.text(voter.fullName.substring(0, 30), x + 3, y + 12);
+            
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text(`CÓDIGO: ${voter.id}`, x + 3, y + 20);
+            doc.setFont("helvetica", "normal");
+            
+            x += cardWidth;
+            if (x + cardWidth > pageWidth - 5) {
+                x = marginX;
+                y += cardHeight;
+            }
+        });
+        
+        doc.save(`Codigos_Votantes_${courseFilter.replace(/\s+/g, '_')}.pdf`);
+    };
+
     return (
         <div className="space-y-8">
             <div className="p-6 bg-white rounded-lg shadow-md">
@@ -50,15 +108,30 @@ const VoterManagement = ({
 
             <div className="p-6 bg-white rounded-lg shadow-md">
                 <h3 className="text-xl font-semibold mb-2 text-gray-700 flex items-center"><UploadCloud size={22} className="mr-2 text-indigo-600"/>Importar Votantes desde Excel/CSV</h3>
-                <p className="text-sm text-gray-600 mb-1">El archivo debe tener las columnas: "Código Estudiantil", "Nombre Completo", "Nivel Curso", "Nombre Curso".</p>
-                <button
-                    type="button"
-                    onClick={handleDownloadTemplate}
-                    className="text-sm text-indigo-600 hover:underline mb-3 inline-block bg-transparent border-none p-0 cursor-pointer">
-                    Descargar plantilla CSV de ejemplo
-                </button>
-                <input type="file" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} disabled={isImporting} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 mb-2" />
-                {isImporting && <p className="text-sm text-indigo-600">Procesando archivo, por favor espera...</p>}
+                
+                <div className="bg-indigo-50 border-l-4 border-indigo-400 p-4 mb-4 rounded-r-md">
+                    <p className="text-sm text-indigo-800 font-medium mb-1">
+                        Formato flexible: El sistema detectará automáticamente las siguientes columnas (no importa mayúsculas o tildes):
+                    </p>
+                    <ul className="text-sm text-indigo-700 list-disc list-inside space-y-1 mb-2">
+                        <li><b>Código:</b> "Código", "Matrícula", "ID", "Cédula"</li>
+                        <li><b>Nombre:</b> "Nombre Completo", "Estudiante", "Alumno"</li>
+                        <li><b>Nivel:</b> "Nivel", "Grado", "Año"</li>
+                        <li><b>Curso:</b> "Curso", "Paralelo", "Sección"</li>
+                    </ul>
+                    <p className="text-xs text-indigo-600">
+                        Opcionalmente puedes descargar la plantilla con los nombres de columna estándar: 
+                        <button
+                            type="button"
+                            onClick={handleDownloadTemplate}
+                            className="text-xs text-indigo-800 font-semibold hover:underline ml-1 inline-block bg-transparent border-none p-0 cursor-pointer">
+                            Descargar Plantilla CSV
+                        </button>
+                    </p>
+                </div>
+                
+                <input type="file" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} disabled={isImporting} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 transition-all mb-2 cursor-pointer" />
+                {isImporting && <p className="text-sm font-medium text-indigo-600 animate-pulse mt-2 flex items-center"><UploadCloud className="animate-bounce mr-2" size={18}/> Procesando y guardando archivo, por favor espera...</p>}
             </div>
 
             <div className="p-6 bg-white rounded-lg shadow-md">
@@ -82,6 +155,9 @@ const VoterManagement = ({
                 {voterListView === 'all' ? (
                     <div className="mt-6">
                         <div className="flex flex-col sm:flex-row justify-end items-center mb-4 gap-4">
+                            <button onClick={handleExportVotersPDF} className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 shadow-sm transition-colors">
+                                <Printer size={16} className="mr-2" /> Exportar Códigos PDF
+                            </button>
                             {courseFilter !== 'all' ? (
                                 <button onClick={() => handleDeleteCourseVoters(courseFilter)} className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
                                     <Trash2 size={16} className="mr-2" /> Borrar Curso: {courseFilter}

@@ -1,38 +1,36 @@
-# 🗳️ Sistema de Votación UEEA
+<div align="center">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/React-icon.svg/1200px-React-icon.svg.png" alt="React Logo" width="100" />
+  <h1>🗳️ Sistema de Votación Escolar</h1>
+  <p><strong>Un sistema de votación electrónica moderno, seguro y eficiente, diseñado para procesos electorales estudiantiles.</strong></p>
+</div>
 
-Sistema de votación electrónica desarrollado para la Unidad Educativa Ecuatoriana Austriaca. Permite realizar elecciones estudiantiles de manera segura y eficiente.
+<br />
 
-## 🚀 Características
+## 🚀 Características Principales
 
-- **Dashboard Administrativo**: Gestión completa de elecciones y votantes
-- **Sistema de Votación**: Interfaz intuitiva para estudiantes
-- **Importación Masiva**: Carga de estudiantes via Excel/CSV
-- **Resultados en Tiempo Real**: Visualización de resultados con gráficos
-- **Exportación de Datos**: Descarga de resultados en Excel
-- **Seguridad**: Autenticación Firebase y prevención de doble votación
-- **Responsive**: Optimizado para móviles y escritorio
+*   📊 **Dashboard Administrativo**: Panel de control interactivo para gestionar elecciones, cursos y estudiantes.
+*   📱 **Votación Intuitiva**: Interfaz amigable para que los estudiantes emitan su voto de forma rápida desde cualquier dispositivo.
+*   👥 **Importación Masiva**: Carga rápida de padrón electoral mediante archivos Excel o CSV.
+*   📈 **Resultados en Tiempo Real**: Estadísticas y gráficos al instante utilizando Recharts.
+*   🖨️ **Exportación de Datos**: Generación automática de reportes en PDF y generación de códigos únicos para imprimir.
+*   🔒 **Alta Seguridad**: Integración con Firebase Authentication y validación en tiempo real para prevenir doble votación.
 
-## 🛠️ Tecnologías
+## 🛠️ Stack Tecnológico
 
-- **Frontend**: React 19, Tailwind CSS
-- **Backend**: Firebase (Firestore, Authentication)
-- **Charts**: Recharts
-- **Icons**: Lucide React
-- **Build Tool**: Create React App
-- **Package Manager**: pnpm
+Este proyecto fue desarrollado utilizando herramientas modernas para garantizar escalabilidad y excelente experiencia de usuario:
 
-## 📋 Prerrequisitos
+*   **Frontend**: React 19 + Vite
+*   **Estilos**: Tailwind CSS v4
+*   **Backend & Base de Datos**: Firebase (Firestore, Authentication)
+*   **Gráficos**: Recharts
+*   **Exportación PDF**: jsPDF & html-to-image
+*   **Iconos**: Lucide React
 
-- Node.js 16+ 
-- pnpm
-- Cuenta de Firebase
-- Navegador moderno
-
-## ⚙️ Instalación
+## ⚙️ Instalación y Uso Local
 
 1. **Clonar el repositorio**
    ```bash
-   git clone https://github.com/tu-usuario/sistema-votacion-ueea.git
+   git clone https://github.com/josuegomez/sistema-votacion-ueea.git
    cd sistema-votacion-ueea
    ```
 
@@ -41,155 +39,21 @@ Sistema de votación electrónica desarrollado para la Unidad Educativa Ecuatori
    pnpm install
    ```
 
-3. **Configurar variables de entorno**
+3. **Configurar Variables de Entorno**
+   Renombra `.env.example` a `.env` y coloca las credenciales de tu proyecto de Firebase.
+
+4. **Ejecutar el Servidor de Desarrollo**
    ```bash
-   cp .env.example .env
-   ```
-   
-   Completar `.env` con tus credenciales de Firebase:
-   ```env
-   REACT_APP_FIREBASE_API_KEY=tu_api_key
-   REACT_APP_FIREBASE_AUTH_DOMAIN=tu_proyecto.firebaseapp.com
-   REACT_APP_FIREBASE_PROJECT_ID=tu_proyecto_id
-   # ... resto de variables
+   pnpm run dev
    ```
 
-4. **Configurar Firebase**
-   - Crear proyecto en [Firebase Console](https://console.firebase.google.com)
-   - Habilitar Authentication (Email/Password y Anonymous)
-   - Crear base de datos Firestore
-   - Configurar reglas de seguridad (ver sección Seguridad)
+## 🏗️ Despliegue
 
-5. **Iniciar aplicación**
-   ```bash
-   pnpm start
-   ```
-
-## 🔐 Configuración de Seguridad
-
-### Reglas de Firestore (IMPORTANTE)
-
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Solo administradores autenticados pueden escribir
-    match /{document=**} {
-      allow read, write: if request.auth != null && request.auth.token.email != null;
-    }
-    
-    // Usuarios anónimos solo pueden leer datos públicos y votar
-    match /artifacts/{appId}/public/data/{document=**} {
-      allow read: if request.auth != null;
-    }
-    
-    match /artifacts/{appId}/public/data/votes/{voteId} {
-      allow create: if request.auth != null && 
-                      request.resource.data.voterCode is string &&
-                      request.resource.data.electionId is string;
-    }
-    
-    match /artifacts/{appId}/public/data/voters/{voterId} {
-      allow update: if request.auth != null && 
-                      resource.id == voterId &&
-                      request.resource.data.diff(resource.data).affectedKeys() == ['hasVoted'].toSet();
-    }
-  }
-}
-```
-
-## 📖 Uso
-
-### Administrador
-1. Acceder con credenciales de administrador
-2. Crear nueva elección con opciones
-3. Importar lista de votantes (Excel/CSV)
-4. Activar elección
-5. Monitorear resultados en tiempo real
-6. Exportar resultados finales
-
-### Estudiante
-1. Ingresar código estudiantil
-2. Seleccionar opción de voto
-3. Confirmar voto
-4. Recibir confirmación
-
-## 📊 Scripts Disponibles
-
-```bash
-# Desarrollo
-pnpm start          # Iniciar servidor de desarrollo
-pnpm build          # Crear build de producción
-pnpm test           # Ejecutar tests
-
-# Análisis
-pnpm build:analyze  # Analizar tamaño del bundle
-```
-
-## 🚀 Despliegue
-
-### Firebase Hosting (Recomendado)
-```bash
-# Instalar Firebase CLI
-npm install -g firebase-tools
-
-# Login y configurar
-firebase login
-firebase init hosting
-
-# Desplegar
-pnpm build
-firebase deploy
-```
-
-### Netlify / Vercel
-1. Conectar repositorio
-2. Configurar variables de entorno
-3. Build command: `pnpm build`
-4. Publish directory: `build`
-
-## 🔧 Estructura del Proyecto
-
-```
-src/
-├── App.js              # Componente principal
-├── App.css             # Estilos globales
-├── index.js            # Punto de entrada
-└── components/         # Componentes (futuras versiones)
-
-public/
-├── index.html          # Template HTML
-├── manifest.json       # PWA manifest
-└── favicon.ico         # Icono
-
-Firebase/
-├── firestore.rules     # Reglas de seguridad
-├── firebase.json       # Configuración Firebase
-└── .env               # Variables de entorno (no incluir en Git)
-```
-
-## 🤝 Contribuir
-
-1. Fork del proyecto
-2. Crear branch para feature (`git checkout -b feature/AmazingFeature`)
-3. Commit cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push al branch (`git push origin feature/AmazingFeature`)
-5. Abrir Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT - ver [LICENSE](LICENSE) para detalles.
-
-## 👥 Autores
-
-- **Tu Nombre** - *Desarrollo inicial* - [tu-usuario](https://github.com/tu-usuario)
-
-## 🙏 Agradecimientos
-
-- Unidad Educativa Ecuatoriana Austriaca
-- Comunidad de React y Firebase
-- Contribuidores del proyecto
+Este sistema está listo para ser desplegado en plataformas modernas como **Vercel**, **Netlify**, o **Firebase Hosting**. Solo ejecuta `pnpm build` para generar los archivos optimizados listos para producción.
 
 ---
 
-**⚠️ Nota de Seguridad**: Este sistema maneja datos sensibles de votación. Asegúrate de seguir todas las mejores prácticas de seguridad antes de usar en producción.
+<div align="center">
+  <p>Desarrollado y mantenido de forma independiente para facilitar procesos electorales.</p>
+  <b>Hecho con ❤️ por Josue Gomez</b>
+</div>

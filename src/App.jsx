@@ -109,7 +109,8 @@ function App() {
                 name: courseName,
                 "Votos Emitidos": voted,
                 "Faltan por Votar": courseVoters.length - voted,
-                total: courseVoters.length
+                total: courseVoters.length,
+                missingVoters: courseVoters.filter(v => !(v.hasVoted && v.hasVoted[election.id])).map(v => v.fullName)
             };
         });
     }, [voters, elections, uniqueCourses]);
@@ -152,20 +153,17 @@ function App() {
                 }
                 setIsLoading(false);
             } else {
-                // Si no hay usuario, intentar autenticación anónima
-                try {
-                    setIsLoading(true);
-                    await signInAnonymously(auth);
-                    // El estado se actualizará automáticamente por onAuthStateChanged
-                } catch (error) {
-                    console.error("Error en autenticación anónima:", error);
-                    setError(`Error de conexión: ${error.message}. Intenta recargar la página.`);
-                    setIsLoading(false);
-                }
+                // Set loading to false immediately to show the login screen
+                setIsLoading(false);
                 setIsAdmin(false);
                 if (!currentUser) {
                     setView('loginChoice');
                 }
+                
+                // Intentar autenticación anónima en segundo plano
+                signInAnonymously(auth).catch((error) => {
+                    console.error("Error en autenticación anónima en segundo plano:", error);
+                });
             }
         });
 
@@ -621,11 +619,26 @@ function App() {
                      return;
                 }
                 
-                const expectedHeaders = ["Código Estudiantil", "Nombre Completo", "Nivel Curso", "Nombre Curso"];
                 const actualHeaders = Object.keys(json[0]);
-                const missingHeaders = expectedHeaders.filter(h => !actualHeaders.includes(h));
-                if (missingHeaders.length > 0) {
-                    setError(`El archivo no contiene las columnas requeridas: ${missingHeaders.join(", ")}.`);
+                
+                const normalizeString = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+                const getMappedKey = (headers, possibleNames) => {
+                    for (const header of headers) {
+                        const norm = normalizeString(header);
+                        if (possibleNames.some(p => norm.includes(normalizeString(p)))) {
+                            return header;
+                        }
+                    }
+                    return null;
+                };
+
+                const studentIdKey = getMappedKey(actualHeaders, ["codigo", "matricula", "id", "cedula"]);
+                const fullNameKey = getMappedKey(actualHeaders, ["nombre", "completo", "estudiante", "alumno"]);
+                const courseLevelKey = getMappedKey(actualHeaders, ["nivel", "grado", "año", "ano"]);
+                const courseNameKey = getMappedKey(actualHeaders, ["curso", "paralelo", "seccion", "clase"]);
+
+                if (!studentIdKey || !fullNameKey || !courseLevelKey || !courseNameKey) {
+                    setError(`No se pudieron identificar todas las columnas automáticamente. Asegúrate de tener columnas para: Código, Nombre, Nivel y Curso.`);
                     setIsImporting(false);
                     if(event.target) event.target.value = null;
                     return;
@@ -637,10 +650,10 @@ function App() {
                 let processedCount = 0;
 
                 for (const row of json) {
-                    const studentId = row["Código Estudiantil"]?.toString().trim();
-                    const fullName = row["Nombre Completo"]?.toString().trim();
-                    const courseLevel = row["Nivel Curso"]?.toString().trim();
-                    const courseName = row["Nombre Curso"]?.toString().trim();
+                    const studentId = row[studentIdKey]?.toString().trim();
+                    const fullName = row[fullNameKey]?.toString().trim();
+                    const courseLevel = row[courseLevelKey]?.toString().trim();
+                    const courseName = row[courseNameKey]?.toString().trim();
                     
                     if (!studentId || !fullName || !courseLevel || !courseName) {
                         continue;
@@ -870,6 +883,8 @@ function App() {
                     currentVoter={currentVoter} 
                     isAdmin={isAdmin} 
                     handleLogout={handleLogout} 
+                    view={view}
+                    setView={setView}
                 />
             )}
             

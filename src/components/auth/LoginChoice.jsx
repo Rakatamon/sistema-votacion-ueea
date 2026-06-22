@@ -19,10 +19,10 @@ const LoginChoice = ({ user, isLoading, studentId, setStudentId, handleStudentLo
                 </div>
             )}
             <div className="bg-white p-8 sm:p-12 rounded-xl shadow-2xl">
-                <img 
-                    src={INSTITUTION_LOGO_URL} 
-                    alt="Logo Institución" 
-                    className="h-24 w-24 mx-auto mb-6 rounded-full object-contain bg-gray-100 p-1" 
+                <img
+                    src={INSTITUTION_LOGO_URL}
+                    alt="Logo Institución"
+                    className="h-24 w-24 mx-auto mb-6 rounded-full object-contain bg-gray-100 p-1"
                     onError={(e) => { e.target.style.display = 'none'; }}
                 />
                 <h2 className="text-3xl font-bold text-gray-800 mb-2">Sistema de Votación</h2>
@@ -30,20 +30,20 @@ const LoginChoice = ({ user, isLoading, studentId, setStudentId, handleStudentLo
                 <form onSubmit={handleStudentLogin}>
                     <div className="mb-4">
                         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="studentId">Código Estudiantil</label>
-                        <input 
-                            type="text" 
-                            id="studentId" 
-                            value={studentId} 
-                            onChange={(e) => setStudentId(e.target.value)} 
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline disabled:bg-gray-100" 
-                            required 
+                        <input
+                            type="text"
+                            id="studentId"
+                            value={studentId}
+                            onChange={(e) => setStudentId(e.target.value)}
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline disabled:bg-gray-100"
+                            required
                             disabled={!user || isLoading}
                         />
                     </div>
                     <Messages error={error} success={success} clearMessages={clearMessages} />
-                    <button 
-                        type="submit" 
-                        disabled={isLoading || !user} 
+                    <button
+                        type="submit"
+                        disabled={isLoading || !user}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline disabled:opacity-50 text-lg transition-all flex items-center justify-center"
                     >
                         {isLoading ? (
@@ -59,6 +59,9 @@ const LoginChoice = ({ user, isLoading, studentId, setStudentId, handleStudentLo
                         ) : 'Acceder para Votar'}
                     </button>
                 </form>
+            </div>
+            <div className="mt-8 text-center text-gray-500 text-sm font-medium">
+                Desarrollado con <span className="text-red-500">❤️</span> por <a href="#" className="hover:text-blue-600 transition-colors">Josué Gómez</a>
             </div>
         </div>
     );
